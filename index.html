@@ -17,12 +17,29 @@
       margin-bottom: 20px;
     }
 
+    .category-group {
+      margin: 20px auto;
+      padding: 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      max-width: 600px;
+      background-color: #f0f0f0;
+    }
+
+    .category-title {
+      font-weight: bold;
+      font-size: 1.2em;
+      margin-bottom: 10px;
+    }
+
     .toggle-buttons {
-      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 6px;
     }
 
     .toggle-buttons button {
-      margin: 4px;
       padding: 8px 12px;
       font-size: 1em;
       border: 2px solid #444;
@@ -40,7 +57,7 @@
       padding: 14px 28px;
       font-size: 1.2em;
       cursor: pointer;
-      margin-bottom: 30px;
+      margin: 30px 0;
     }
 
     .output {
@@ -75,26 +92,37 @@
 <body>
   <h1>お題生成メーカー</h1>
 
-  <div class="toggle-buttons" id="categorySelector">
-    <button data-category="試合">通算試合</button>
-    <button class="active" data-category="通算安打">通算安打</button>
-    <button class="active" data-category="通算ホームラン">通算ホームラン</button>
-    <button class="active" data-category="通算盗塁">通算盗塁</button>
-    <button　data-category="通算犠打">通算犠打</button>
-    <button　data-category="通算死球">通算死球</button>
-    <button　data-category="通算三振">通算三振</button>
-    <button　data-category="通算併殺打">通算併殺打</button>
-    <button data-category="通算登板">通算登板</button>
-    <button data-category="通算完封">通算完封</button>
-    <button class="active" data-category="通算勝利">通算勝利</button>
-    <button data-category="通算敗北">通算敗北</button>
-    <button class="active" data-category="通算セーブ">通算セーブ</button>
-    <button data-category="通算ホールド">通算ホールド</button>
-    <button data-category="通算投球回">通算投球回</button>
-    <button data-category="通算与四球">通算与四球</button>
-    <button data-category="通算与死球">通算与死球</button>
-    <button data-category="通算奪三振">通算奪三振</button>
-    <button data-category="通算ボーク">通算ボーク</button>
+  <!-- 打撃部門 -->
+  <div class="category-group">
+    <div class="category-title">打撃部門</div>
+    <div class="toggle-buttons">
+      <button data-category="通算試合">通算試合</button>
+      <button class="active" data-category="通算安打">通算安打</button>
+      <button class="active" data-category="通算ホームラン">通算ホームラン</button>
+      <button class="active" data-category="通算盗塁">通算盗塁</button>
+      <button data-category="通算犠打">通算犠打</button>
+      <button data-category="通算死球">通算死球</button>
+      <button data-category="通算三振">通算三振</button>
+      <button data-category="通算併殺打">通算併殺打</button>
+    </div>
+  </div>
+
+  <!-- 投手部門 -->
+  <div class="category-group">
+    <div class="category-title">投手部門</div>
+    <div class="toggle-buttons">
+      <button data-category="通算登板">通算登板</button>
+      <button data-category="通算完封">通算完封</button>
+      <button class="active" data-category="通算勝利">通算勝利</button>
+      <button data-category="通算敗北">通算敗北</button>
+      <button class="active" data-category="通算セーブ">通算セーブ</button>
+      <button data-category="通算ホールド">通算ホールド</button>
+      <button data-category="通算投球回">通算投球回</button>
+      <button data-category="通算与四球">通算与四球</button>
+      <button data-category="通算与死球">通算与死球</button>
+      <button data-category="通算奪三振">通算奪三振</button>
+      <button data-category="通算ボーク">通算ボーク</button>
+    </div>
   </div>
 
   <button id="toggleButton" onclick="toggleAnimation()">お題を出す</button>
@@ -126,9 +154,9 @@
     const text1 = document.getElementById("text1");
     const text2 = document.getElementById("text2");
     const button = document.getElementById("toggleButton");
-    const categoryButtons = document.querySelectorAll('#categorySelector button');
+    const categoryButtons = document.querySelectorAll('.toggle-buttons button');
 
-    // カテゴリのON/OFF切り替え
+    // ON/OFF切り替え
     categoryButtons.forEach(btn => {
       btn.addEventListener('click', () => {
         btn.classList.toggle('active');
@@ -150,7 +178,6 @@
       }
 
       if (!isAnimating) {
-        // アニメーション開始
         isAnimating = true;
         button.textContent = "ストップ";
         text1.style.display = "block";
@@ -166,7 +193,6 @@
           categoryOutput.textContent = category;
         }, 100);
       } else {
-        // アニメーション停止
         isAnimating = false;
         button.textContent = "お題を出す";
         clearInterval(kanaInterval);
