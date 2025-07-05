@@ -67,3 +67,98 @@
         font-size: 0.9em;
       }
       button#toggleButton {
+        font-size: 1em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>お題生成メーカー</h1>
+
+  <div class="toggle-buttons" id="categorySelector">
+    <button class="active" data-category="通算安打">通算安打</button>
+    <button class="active" data-category="通算ホームラン">通算ホームラン</button>
+    <button class="active" data-category="通算盗塁">通算盗塁</button>
+    <button class="active" data-category="通算勝利">通算勝利</button>
+    <button class="active" data-category="通算セーブ">通算セーブ</button>
+  </div>
+
+  <button id="toggleButton" onclick="toggleAnimation()">お題を出す</button>
+
+  <div class="output" id="kanaOutput"></div>
+  <div class="fixed-text" id="text1">から始まる</div>
+  <div class="output" id="categoryOutput"></div>
+  <div class="fixed-text" id="text2">が最も多い選手</div>
+
+  <script>
+    const kanaList = [
+      "あ", "い", "う", "え", "お",
+      "か", "き", "く", "け", "こ",
+      "さ", "し", "す", "せ", "そ",
+      "た", "ち", "つ", "て", "と",
+      "な", "に", "ぬ", "ね", "の",
+      "は", "ひ", "ふ", "へ", "ほ",
+      "ま", "み", "む", "め", "も",
+      "や",       "ゆ",       "よ",
+      "ら", "り", "る", "れ", "ろ",
+      "わ"
+    ];
+
+    let isAnimating = false;
+    let kanaInterval, categoryInterval;
+
+    const kanaOutput = document.getElementById("kanaOutput");
+    const categoryOutput = document.getElementById("categoryOutput");
+    const text1 = document.getElementById("text1");
+    const text2 = document.getElementById("text2");
+    const button = document.getElementById("toggleButton");
+    const categoryButtons = document.querySelectorAll('#categorySelector button');
+
+    // カテゴリのON/OFF切り替え
+    categoryButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        btn.classList.toggle('active');
+      });
+    });
+
+    function getActiveCategories() {
+      return Array.from(categoryButtons)
+        .filter(btn => btn.classList.contains('active'))
+        .map(btn => btn.dataset.category);
+    }
+
+    function toggleAnimation() {
+      const activeCategories = getActiveCategories();
+
+      if (activeCategories.length === 0) {
+        alert("1つ以上のカテゴリを選択してください");
+        return;
+      }
+
+      if (!isAnimating) {
+        // アニメーション開始
+        isAnimating = true;
+        button.textContent = "ストップ";
+        text1.style.display = "block";
+        text2.style.display = "block";
+
+        kanaInterval = setInterval(() => {
+          const kana = kanaList[Math.floor(Math.random() * kanaList.length)];
+          kanaOutput.textContent = kana;
+        }, 80);
+
+        categoryInterval = setInterval(() => {
+          const category = activeCategories[Math.floor(Math.random() * activeCategories.length)];
+          categoryOutput.textContent = category;
+        }, 100);
+      } else {
+        // アニメーション停止
+        isAnimating = false;
+        button.textContent = "お題を出す";
+        clearInterval(kanaInterval);
+        clearInterval(categoryInterval);
+      }
+    }
+  </script>
+</body>
+</html>
