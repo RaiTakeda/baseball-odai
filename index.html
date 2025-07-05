@@ -14,10 +14,29 @@
 
     h1 {
       font-size: 2em;
-      margin-bottom: 30px;
+      margin-bottom: 20px;
     }
 
-    button {
+    .toggle-buttons {
+      margin-bottom: 20px;
+    }
+
+    .toggle-buttons button {
+      margin: 4px;
+      padding: 8px 12px;
+      font-size: 1em;
+      border: 2px solid #444;
+      background-color: #eee;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    .toggle-buttons button.active {
+      background-color: #444;
+      color: white;
+    }
+
+    button#toggleButton {
       padding: 14px 28px;
       font-size: 1.2em;
       cursor: pointer;
@@ -44,78 +63,7 @@
       .fixed-text {
         font-size: 1.2em;
       }
-      button {
-        font-size: 1em;
+      .toggle-buttons button {
+        font-size: 0.9em;
       }
-    }
-  </style>
-</head>
-<body>
-  <h1>お題生成メーカー</h1>
-  <button id="toggleButton" onclick="toggleAnimation()">お題を出す</button>
-
-  <div class="output" id="kanaOutput"></div>
-  <div class="fixed-text" id="text1">から始まる</div>
-  <div class="output" id="categoryOutput"></div>
-  <div class="fixed-text" id="text2">が最も多い選手</div>
-
-  <script>
-    const kanaList = [
-      "あ", "い", "う", "え", "お",
-      "か", "き", "く", "け", "こ",
-      "さ", "し", "す", "せ", "そ",
-      "た", "ち", "つ", "て", "と",
-      "な", "に", "ぬ", "ね", "の",
-      "は", "ひ", "ふ", "へ", "ほ",
-      "ま", "み", "む", "め", "も",
-      "や",       "ゆ",       "よ",
-      "ら", "り", "る", "れ", "ろ",
-      "わ"
-    ];
-
-    const categories = [
-      "通算安打",
-      "通算ホームラン",
-      "通算盗塁",
-      "通算勝利",
-      "通算セーブ"
-    ];
-
-    let isAnimating = false;
-    let kanaInterval, categoryInterval;
-
-    function toggleAnimation() {
-      const kanaOutput = document.getElementById("kanaOutput");
-      const categoryOutput = document.getElementById("categoryOutput");
-      const text1 = document.getElementById("text1");
-      const text2 = document.getElementById("text2");
-      const button = document.getElementById("toggleButton");
-
-      if (!isAnimating) {
-        // アニメーション開始
-        isAnimating = true;
-        button.textContent = "ストップ";
-
-        text1.style.display = "block";
-        text2.style.display = "block";
-
-        kanaInterval = setInterval(() => {
-          const kana = kanaList[Math.floor(Math.random() * kanaList.length)];
-          kanaOutput.textContent = kana;
-        }, 80);
-
-        categoryInterval = setInterval(() => {
-          const category = categories[Math.floor(Math.random() * categories.length)];
-          categoryOutput.textContent = category;
-        }, 100);
-      } else {
-        // アニメーション停止
-        isAnimating = false;
-        button.textContent = "お題を出す";
-        clearInterval(kanaInterval);
-        clearInterval(categoryInterval);
-      }
-    }
-  </script>
-</body>
-</html>
+      button#toggleButton {
