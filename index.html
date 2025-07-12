@@ -19,17 +19,29 @@
 
     .category-group {
       margin: 20px auto;
-      padding: 15px;
+      padding: 10px 15px;
       border: 1px solid #ccc;
       border-radius: 8px;
       max-width: 600px;
       background-color: #f0f0f0;
     }
 
-    .category-title {
+    .accordion-title {
+      cursor: pointer;
       font-weight: bold;
       font-size: 1.2em;
-      margin-bottom: 10px;
+      margin: 10px 0;
+      background-color: #ddd;
+      padding: 10px;
+      border-radius: 5px;
+    }
+
+    .accordion-content {
+      display: none;
+    }
+
+    .accordion-content.open {
+      display: block;
     }
 
     .toggle-buttons {
@@ -67,6 +79,10 @@
       min-height: 1.5em;
     }
 
+    #kanaOutput {
+      font-size: 3em;
+    }
+
     .fixed-text {
       font-size: 1.5em;
       margin: 10px 0;
@@ -78,17 +94,18 @@
         font-size: 2em;
       }
 
-      /* ▼仮名（平仮名）だけのサイズを変更 */
       #kanaOutput {
         font-size: 4em;
       }
-      
+
       .fixed-text {
         font-size: 1.2em;
       }
+
       .toggle-buttons button {
         font-size: 0.9em;
       }
+
       button#toggleButton {
         font-size: 1em;
       }
@@ -98,36 +115,40 @@
 <body>
   <h1>お題生成メーカー</h1>
 
-  <!-- 打撃部門 -->
+  <!-- 打撃部門（初期は閉じてる） -->
   <div class="category-group">
-    <div class="category-title">打撃部門</div>
-    <div class="toggle-buttons">
-      <button data-category="通算試合">通算試合</button>
-      <button class="active" data-category="通算安打">通算安打</button>
-      <button class="active" data-category="通算ホームラン">通算ホームラン</button>
-      <button class="active" data-category="通算盗塁">通算盗塁</button>
-      <button data-category="通算犠打">通算犠打</button>
-      <button data-category="通算死球">通算死球</button>
-      <button data-category="通算三振">通算三振</button>
-      <button data-category="通算併殺打">通算併殺打</button>
+    <div class="accordion-title" onclick="toggleAccordion(this)">打撃部門 ▲</div>
+    <div class="accordion-content">
+      <div class="toggle-buttons">
+        <button data-category="通算試合">通算試合</button>
+        <button class="active" data-category="通算安打">通算安打</button>
+        <button class="active" data-category="通算ホームラン">通算ホームラン</button>
+        <button class="active" data-category="通算盗塁">通算盗塁</button>
+        <button data-category="通算犠打">通算犠打</button>
+        <button data-category="通算死球">通算死球</button>
+        <button data-category="通算三振">通算三振</button>
+        <button data-category="通算併殺打">通算併殺打</button>
+      </div>
     </div>
   </div>
 
-  <!-- 投手部門 -->
+  <!-- 投手部門（初期は閉じてる） -->
   <div class="category-group">
-    <div class="category-title">投手部門</div>
-    <div class="toggle-buttons">
-      <button data-category="通算登板">通算登板</button>
-      <button data-category="通算完封">通算完封</button>
-      <button class="active" data-category="通算勝利">通算勝利</button>
-      <button data-category="通算敗北">通算敗北</button>
-      <button class="active" data-category="通算セーブ">通算セーブ</button>
-      <button data-category="通算ホールド">通算ホールド</button>
-      <button data-category="通算投球回">通算投球回</button>
-      <button data-category="通算与四球">通算与四球</button>
-      <button data-category="通算与死球">通算与死球</button>
-      <button data-category="通算奪三振">通算奪三振</button>
-      <button data-category="通算ボーク">通算ボーク</button>
+    <div class="accordion-title" onclick="toggleAccordion(this)">投手部門 ▲</div>
+    <div class="accordion-content">
+      <div class="toggle-buttons">
+        <button data-category="通算登板">通算登板</button>
+        <button data-category="通算完封">通算完封</button>
+        <button class="active" data-category="通算勝利">通算勝利</button>
+        <button data-category="通算敗北">通算敗北</button>
+        <button class="active" data-category="通算セーブ">通算セーブ</button>
+        <button data-category="通算ホールド">通算ホールド</button>
+        <button data-category="通算投球回">通算投球回</button>
+        <button data-category="通算与四球">通算与四球</button>
+        <button data-category="通算与死球">通算与死球</button>
+        <button data-category="通算奪三振">通算奪三振</button>
+        <button data-category="通算ボーク">通算ボーク</button>
+      </div>
     </div>
   </div>
 
@@ -204,6 +225,14 @@
         clearInterval(kanaInterval);
         clearInterval(categoryInterval);
       }
+    }
+
+    function toggleAccordion(titleEl) {
+      const content = titleEl.nextElementSibling;
+      content.classList.toggle('open');
+      titleEl.textContent = titleEl.textContent.includes('▲')
+        ? titleEl.textContent.replace('▲', '▼')
+        : titleEl.textContent.replace('▼', '▲');
     }
   </script>
 </body>
