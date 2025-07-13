@@ -115,7 +115,7 @@
 <body>
   <h1>お題生成メーカー</h1>
 
-  <!-- 打撃部門（初期は閉じてる） -->
+  <!-- 打撃部門 -->
   <div class="category-group">
     <div class="accordion-title" onclick="toggleAccordion(this)">打撃部門 ▲</div>
     <div class="accordion-content">
@@ -132,7 +132,7 @@
     </div>
   </div>
 
-  <!-- 投手部門（初期は閉じてる） -->
+  <!-- 投手部門 -->
   <div class="category-group">
     <div class="accordion-title" onclick="toggleAccordion(this)">投手部門 ▲</div>
     <div class="accordion-content">
@@ -173,6 +173,34 @@
       "わ"
     ];
 
+    // 濁音・半濁音を含めた変換マップ
+    const dakutenMap = {
+      "か": ["か", "が"],
+      "き": ["き", "ぎ"],
+      "く": ["く", "ぐ"],
+      "け": ["け", "げ"],
+      "こ": ["こ", "ご"],
+      "さ": ["さ", "ざ"],
+      "し": ["し", "じ"],
+      "す": ["す", "ず"],
+      "せ": ["せ", "ぜ"],
+      "そ": ["そ", "ぞ"],
+      "た": ["た", "だ"],
+      "ち": ["ち", "ぢ"],
+      "つ": ["つ", "づ"],
+      "て": ["て", "で"],
+      "と": ["と", "ど"],
+      "は": ["は", "ば", "ぱ"],
+      "ひ": ["ひ", "び", "ぴ"],
+      "ふ": ["ふ", "ぶ", "ぷ"],
+      "へ": ["へ", "べ", "ぺ"],
+      "ほ": ["ほ", "ぼ", "ぽ"]
+    };
+
+    function getExpandedKana(kana) {
+      return dakutenMap[kana] ? dakutenMap[kana].join("・") : kana;
+    }
+
     let isAnimating = false;
     let kanaInterval, categoryInterval;
 
@@ -183,7 +211,6 @@
     const button = document.getElementById("toggleButton");
     const categoryButtons = document.querySelectorAll('.toggle-buttons button');
 
-    // ON/OFF切り替え
     categoryButtons.forEach(btn => {
       btn.addEventListener('click', () => {
         btn.classList.toggle('active');
@@ -212,7 +239,7 @@
 
         kanaInterval = setInterval(() => {
           const kana = kanaList[Math.floor(Math.random() * kanaList.length)];
-          kanaOutput.textContent = kana;
+          kanaOutput.textContent = getExpandedKana(kana);
         }, 80);
 
         categoryInterval = setInterval(() => {
