@@ -84,7 +84,6 @@
 
     /* ▼ 追加：ホワイトボードへのリンクボタン */
     .wb-link {
-      display: inline-block;
       margin: 16px auto 6px;
       padding: 12px 18px;
       border-radius: 8px;
@@ -94,6 +93,9 @@
       text-decoration: none;
       font-weight: 700;
       transition: filter .15s ease;
+      box-sizing: border-box;
+      display: block;
+      max-width: 100%;
     }
     .wb-link:active { filter: brightness(.95); }
 
@@ -262,3 +264,4 @@
   </script>
 </body>
 </html>
+
