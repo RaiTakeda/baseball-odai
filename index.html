@@ -36,13 +36,8 @@
       border-radius: 5px;
     }
 
-    .accordion-content {
-      display: none;
-    }
-
-    .accordion-content.open {
-      display: block;
-    }
+    .accordion-content { display: none; }
+    .accordion-content.open { display: block; }
 
     .toggle-buttons {
       display: flex;
@@ -69,7 +64,7 @@
       padding: 14px 28px;
       font-size: 1.2em;
       cursor: pointer;
-      margin: 20px 0;
+      margin: 20px 0 10px;
     }
 
     .output {
@@ -79,9 +74,7 @@
       min-height: 1.5em;
     }
 
-    #kanaOutput {
-      font-size: 3em;
-    }
+    #kanaOutput { font-size: 3em; }
 
     .fixed-text {
       font-size: 1.5em;
@@ -89,26 +82,28 @@
       display: none;
     }
 
+    /* ▼ 追加：ホワイトボードへのリンクボタン */
+    .wb-link {
+      display: inline-block;
+      margin: 16px auto 6px;
+      padding: 12px 18px;
+      border-radius: 8px;
+      border: 2px solid #1f6feb;
+      background: #e7f0ff;
+      color: #0b3d91;
+      text-decoration: none;
+      font-weight: 700;
+      transition: filter .15s ease;
+    }
+    .wb-link:active { filter: brightness(.95); }
+
     @media (max-width: 600px) {
-      .output {
-        font-size: 2em;
-      }
-
-      #kanaOutput {
-        font-size: 4em;
-      }
-
-      .fixed-text {
-        font-size: 1.2em;
-      }
-
-      .toggle-buttons button {
-        font-size: 0.9em;
-      }
-
-      button#toggleButton {
-        font-size: 1em;
-      }
+      .output { font-size: 2em; }
+      #kanaOutput { font-size: 4em; }
+      .fixed-text { font-size: 1.2em; }
+      .toggle-buttons button { font-size: 0.9em; }
+      button#toggleButton { font-size: 1em; }
+      .wb-link { width: 100%; max-width: 520px; }
     }
   </style>
 </head>
@@ -159,6 +154,11 @@
   <div class="output" id="categoryOutput"></div>
   <div class="fixed-text" id="text2">が最も多い選手</div>
 
+  <!-- ▼ 追加：ホワイトボードへのリンク（同一タブ遷移） -->
+  <a id="openWhiteboard" class="wb-link" href="whiteboard.html">
+    回答用ホワイトボードを開く
+  </a>
+
   <script>
     const kanaList = [
       "あ", "い", "う", "え", "お",
@@ -173,27 +173,14 @@
       "わ"
     ];
 
-    // 濁音・半濁音を含めた変換マップ
     const dakutenMap = {
-      "か": ["か", "が"],
-      "き": ["き", "ぎ"],
-      "く": ["く", "ぐ"],
-      "け": ["け", "げ"],
-      "こ": ["こ", "ご"],
-      "さ": ["さ", "ざ"],
-      "し": ["し", "じ"],
-      "す": ["す", "ず"],
-      "せ": ["せ", "ぜ"],
-      "そ": ["そ", "ぞ"],
-      "た": ["た", "だ"],
-      "つ": ["つ", "づ"],
-      "て": ["て", "で"],
-      "と": ["と", "ど"],
-      "は": ["は", "ば", "ぱ"],
-      "ひ": ["ひ", "び", "ぴ"],
-      "ふ": ["ふ", "ぶ", "ぷ"],
-      "へ": ["へ", "べ", "ぺ"],
-      "ほ": ["ほ", "ぼ", "ぽ"]
+      "か": ["か", "が"], "き": ["き", "ぎ"], "く": ["く", "ぐ"],
+      "け": ["け", "げ"], "こ": ["こ", "ご"], "さ": ["さ", "ざ"],
+      "し": ["し", "じ"], "す": ["す", "ず"], "せ": ["せ", "ぜ"],
+      "そ": ["そ", "ぞ"], "た": ["た", "だ"], "つ": ["つ", "づ"],
+      "て": ["て", "で"], "と": ["と", "ど"], "は": ["は", "ば", "ぱ"],
+      "ひ": ["ひ", "び", "ぴ"], "ふ": ["ふ", "ぶ", "ぷ"],
+      "へ": ["へ", "べ", "ぺ"], "ほ": ["ほ", "ぼ", "ぽ"]
     };
 
     function getExpandedKana(kana) {
@@ -242,7 +229,8 @@
         }, 80);
 
         categoryInterval = setInterval(() => {
-          const category = activeCategories[Math.floor(Math.random() * activeCategories.length)];
+          const active = getActiveCategories(); // 途中で切替に追随
+          const category = active[Math.floor(Math.random() * active.length)];
           categoryOutput.textContent = category;
         }, 100);
       } else {
@@ -260,8 +248,17 @@
         ? titleEl.textContent.replace('▲', '▼')
         : titleEl.textContent.replace('▼', '▲');
     }
+
+    // ▼（任意）リンク押下時にアニメを止めてから遷移したい場合
+    document.getElementById('openWhiteboard').addEventListener('click', () => {
+      if (isAnimating) {
+        isAnimating = false;
+        clearInterval(kanaInterval);
+        clearInterval(categoryInterval);
+        button.textContent = "お題を出す";
+      }
+      // ここで return しない → そのままリンク遷移
+    });
   </script>
 </body>
 </html>
-
-
