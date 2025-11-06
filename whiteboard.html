@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>ホワイトボード（戻るのみ）</title>
+<style>
+  :root { --ui-gap: .5rem; --ui-bg: #f6f7f9; --ui-bd: #d0d4da; }
+  body { margin: 0; background:#fff; color:#222; font-family: system-ui, sans-serif; }
+  .toolbar {
+    position: sticky; top: 0; z-index: 10;
+    display: flex; gap: var(--ui-gap); align-items: center; padding: .5rem;
+    background: rgba(255,255,255,.9); backdrop-filter: blur(6px); border-bottom: 1px solid var(--ui-bd);
+  }
+  .toolbar > * { font: inherit; }
+  .grow { flex: 1; }
+  #board { display:block; width:100vw; height: calc(100dvh - 56px); touch-action: none; background:#fff; }
+  input[type="color"], input[type="range"], button {
+    border:1px solid var(--ui-bd); background: var(--ui-bg); border-radius: .5rem; padding:.35rem .6rem;
+  }
+  label { display:flex; align-items:center; gap:.35rem; white-space: nowrap; }
+  button:disabled { opacity:.5; }
+</style>
+</head>
+<body>
+  <div class="toolbar">
+    <label>色 <input id="color" type="color" value="#000000"></label>
+    <label>太さ <input id="size" type="range" min="1" max="60" value="8"></label>
+    <button id="undo" disabled>戻る</button>
+    <button id="clear">全消去</button>
+    <span class="grow"></span>
+  </div>
+  <canvas id="board"></canvas>
+
+<script>
+(() => {
+  const canvas = document.getElementById('board');
+  const ctx = canvas.getContext('2d', { willReadFrequently: false });
+  const colorEl = document.getElementById('color');
+  const sizeEl  = document.getElementById('size');
+  const undoEl  = document.getElementById('undo');
+  const clearEl = document.getElementById('clear');
+
+  // --- 高DPI対応のキャンバスサイズ設定
+  function resizeCanvas() {
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    const cssW = canvas.clientWidth;
+    const cssH = canvas.clientHeight;
+    const needW = Math.floor(cssW * dpr);
+    const needH = Math.floor(cssH * dpr);
+    if (canvas.width !== needW || canvas.height !== needH) {
+      // 既存描画を保持してスケール復元
+      const snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      canvas.width = needW; canvas.height = needH;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      if (snapshot.width && snapshot.height) {
+        const off = document.createElement('canvas');
+        off.width = snapshot.width; off.height = snapshot.height;
+        off.getContext('2d').putImageData(snapshot, 0, 0);
+        ctx.drawImage(off, 0, 0, cssW, cssH); // CSSピクセルに合わせて復元
+      }
+    }
+  }
+  function fitToWindow() {
+    const toolbarH = document.querySelector('.toolbar').offsetHeight || 56;
+    canvas.style.height = `calc(100dvh - ${toolbarH}px)`;
+    resizeCanvas();
+  }
+  window.addEventListener('resize', fitToWindow, { passive: true });
+  window.addEventListener('orientationchange', fitToWindow, { passive: true });
+  fitToWindow();
+
+  // --- Undo（戻る）実装
+  const undoStack = [];
+  const UNDO_LIMIT = 50;
+  function updateUndoBtn() { undoEl.disabled = undoStack.length === 0; }
+  function pushState() {
+    try {
+      undoStack.push(canvas.toDataURL('image/png'));
+      if (undoStack.length > UNDO_LIMIT) undoStack.shift();
+      updateUndoBtn();
+    } catch(e) {
+      // モバイルで極端に大きい場合の安全弁
+      console.warn('pushState failed:', e);
+    }
+  }
+  function restoreFrom(dataUrl) {
+    const img = new Image();
+    img.src = dataUrl;
+    img.onload = () => {
+      // setTransformでCSS座標描画なのでCSSサイズで描画
+      ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+      ctx.drawImage(img, 0, 0, canvas.clientWidth, canvas.clientHeight);
+    };
+  }
+  undoEl.addEventListener('click', () => {
+    if (undoStack.length === 0) return;
+    const lastUrl = undoStack.pop();
+    updateUndoBtn();
+    restoreFrom(lastUrl);
+  });
+
+  // --- 描画処理
+  let drawing = false;
+  let last = null;
+
+  function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const cx = (e.clientX ?? (e.touches && e.touches[0].clientX));
+    const cy = (e.clientY ?? (e.touches && e.touches[0].clientY));
+    return { x: cx - rect.left, y: cy - rect.top };
+  }
+
+  function stroke(from, to, pressure = 1) {
+    const size = Number(sizeEl.value);
+    ctx.save();
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.strokeStyle = colorEl.value;
+    ctx.lineWidth = size * (pressure || 1);
+    ctx.beginPath();
+    ctx.moveTo(from.x, from.y);
+    ctx.lineTo(to.x, to.y);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function dot(p, pressure = 1) {
+    const size = Number(sizeEl.value);
+    ctx.save();
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = colorEl.value;
+    const r = (size * (pressure || 1)) / 2;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // タッチスクロール抑止（キャンバス上のみ）
+  canvas.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+
+  function onDown(e) {
+    e.preventDefault();
+    // 描き始める前に現在状態を保存 → 直後の「戻る」で元に戻せる
+    pushState();
+    const pos = getPos(e);
+    drawing = true;
+    last = pos;
+    const pressure = (e.pressure && e.pressure > 0) ? e.pressure : 1;
+    dot(pos, pressure);
+  }
+  function onMove(e) {
+    if (!drawing) return;
+    const pos = getPos(e);
+    const pressure = (e.pressure && e.pressure > 0) ? e.pressure : 1;
+    stroke(last, pos, pressure);
+    last = pos;
+  }
+  function onUp() { drawing = false; last = null; }
+
+  const usePointer = 'onpointerdown' in window;
+  if (usePointer) {
+    canvas.addEventListener('pointerdown', onDown);
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
+    window.addEventListener('pointerleave', onUp);
+  } else {
+    canvas.addEventListener('mousedown', onDown);
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    canvas.addEventListener('touchstart', onDown, { passive: false });
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('touchend', onUp, { passive: true });
+    window.addEventListener('touchcancel', onUp, { passive: true });
+  }
+
+  // --- 全消去（消しゴムは削除）
+  clearEl.addEventListener('click', () => {
+    // 消す前に保存しておく → 「戻る」で復活できる
+    pushState();
+    ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+  });
+
+  // 初期状態（空の白紙）は戻る対象にしない
+  updateUndoBtn();
+})();
+</script>
+</body>
+</html>
