@@ -6,7 +6,7 @@
 <title>ホワイトボード</title>
 <style>
   :root { --ui-gap: .5rem; --ui-bg: #f6f7f9; --ui-bd: #d0d4da; }
-  body { margin: 0; background:#fff; color:#222; font-family: system-ui, sans-serif; }
+  body { margin: 0; background:#fff; color:#222; font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans JP", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif; }
   .toolbar {
     position: sticky; top: 0; z-index: 10;
     display: flex; gap: var(--ui-gap); align-items: center; padding: .5rem;
@@ -20,6 +20,31 @@
   }
   label { display:flex; align-items:center; gap:.35rem; white-space: nowrap; }
   button:disabled { opacity:.5; }
+
+  /* ▼ 追加：回答済オーバーレイ */
+  .answered-overlay {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100dvh; /* モバイルのアドレスバー変動に強い */
+    background: #2E75B6;
+    color: #fff;
+    z-index: 9999;  /* ツールバーやキャンバスより前面 */
+    display: none;  /* 初期は非表示 */
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    user-select: none;
+    -webkit-user-select: none;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right)
+             env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  .answered-overlay.show { display: flex; }
+  .answered-text {
+    font-weight: 800;
+    letter-spacing: .08em;
+    font-size: clamp(28px, 8vw, 80px); /* 画面サイズに応じて可変 */
+  }
 </style>
 </head>
 <body>
@@ -29,8 +54,16 @@
     <button id="undo" disabled>戻る</button>
     <button id="clear">全消去</button>
     <span class="grow"></span>
+    <!-- ▼ 追加：回答済ボタン -->
+    <button id="answeredBtn" title="画面を回答済表示に切り替え">回答済</button>
   </div>
+
   <canvas id="board"></canvas>
+
+  <!-- ▼ 追加：回答済オーバーレイ -->
+  <div id="answeredOverlay" class="answered-overlay" aria-hidden="true">
+    <div class="answered-text">回答済</div>
+  </div>
 
 <script>
 (() => {
@@ -40,6 +73,8 @@
   const sizeEl  = document.getElementById('size');
   const undoEl  = document.getElementById('undo');
   const clearEl = document.getElementById('clear');
+  const answeredBtn = document.getElementById('answeredBtn');
+  const answeredOverlay = document.getElementById('answeredOverlay');
 
   // --- 高DPI対応のキャンバスサイズ設定
   function resizeCanvas() {
@@ -49,7 +84,6 @@
     const needW = Math.floor(cssW * dpr);
     const needH = Math.floor(cssH * dpr);
     if (canvas.width !== needW || canvas.height !== needH) {
-      // 既存描画を保持してスケール復元
       const snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
       canvas.width = needW; canvas.height = needH;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -58,7 +92,7 @@
         const off = document.createElement('canvas');
         off.width = snapshot.width; off.height = snapshot.height;
         off.getContext('2d').putImageData(snapshot, 0, 0);
-        ctx.drawImage(off, 0, 0, cssW, cssH); // CSSピクセルに合わせて復元
+        ctx.drawImage(off, 0, 0, cssW, cssH);
       }
     }
   }
@@ -81,7 +115,6 @@
       if (undoStack.length > UNDO_LIMIT) undoStack.shift();
       updateUndoBtn();
     } catch(e) {
-      // モバイルで極端に大きい場合の安全弁
       console.warn('pushState failed:', e);
     }
   }
@@ -89,7 +122,6 @@
     const img = new Image();
     img.src = dataUrl;
     img.onload = () => {
-      // setTransformでCSS座標描画なのでCSSサイズで描画
       ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
       ctx.drawImage(img, 0, 0, canvas.clientWidth, canvas.clientHeight);
     };
@@ -142,8 +174,7 @@
 
   function onDown(e) {
     e.preventDefault();
-    // 描き始める前に現在状態を保存 → 直後の「戻る」で元に戻せる
-    pushState();
+    pushState(); // 「戻る」用に開始時点を保存
     const pos = getPos(e);
     drawing = true;
     last = pos;
@@ -176,18 +207,30 @@
     window.addEventListener('touchcancel', onUp, { passive: true });
   }
 
-  // --- 全消去（消しゴムは削除）
+  // --- 全消去
   clearEl.addEventListener('click', () => {
-    // 消す前に保存しておく → 「戻る」で復活できる
     pushState();
     ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
   });
 
-  // 初期状態（空の白紙）は戻る対象にしない
+  // --- 追加：回答済オーバーレイの表示/非表示
+  answeredBtn.addEventListener('click', () => {
+    answeredOverlay.classList.add('show');
+    answeredOverlay.setAttribute('aria-hidden', 'false');
+  });
+
+  // オーバーレイをタップ/クリックで閉じる
+  const hideOverlay = (e) => {
+    e.preventDefault();
+    answeredOverlay.classList.remove('show');
+    answeredOverlay.setAttribute('aria-hidden', 'true');
+  };
+  answeredOverlay.addEventListener('click', hideOverlay, { passive: false });
+  answeredOverlay.addEventListener('touchstart', hideOverlay, { passive: false });
+
+  // 初期状態
   updateUndoBtn();
 })();
 </script>
 </body>
 </html>
-
-
